@@ -455,19 +455,310 @@ app.get('/', (c) => {
                     <div class="bg-white rounded-xl shadow-lg p-8">
                         <h3 class="text-xl font-bold mb-4">Quick Actions</h3>
                         <div class="space-y-4">
-                            \${user.role !== 'traveler' ? '<button class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700"><i class="fas fa-plus mr-2"></i>Create Delivery Request</button>' : ''}
-                            \${user.role !== 'sender' ? '<button class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700"><i class="fas fa-plane mr-2"></i>Add Trip</button>' : ''}
-                            <button class="w-full border border-gray-300 py-3 rounded-lg hover:bg-gray-50"><i class="fas fa-search mr-2"></i>Browse Marketplace</button>
+                            \${user.role !== 'traveler' ? '<button onclick="showCreateRequestForm()" class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700"><i class="fas fa-plus mr-2"></i>Create Delivery Request</button>' : ''}
+                            \${user.role !== 'sender' ? '<button onclick="showCreateTripForm()" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700"><i class="fas fa-plane mr-2"></i>Add Trip</button>' : ''}
+                            <button onclick="browseMarketplace()" class="w-full border border-gray-300 py-3 rounded-lg hover:bg-gray-50"><i class="fas fa-search mr-2"></i>Browse Marketplace</button>
                         </div>
                     </div>
 
-                    <div class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                        <p class="text-yellow-700">
+                    <div id="requestFormContainer"></div>
+                    <div id="tripFormContainer"></div>
+                    <div id="marketplaceContainer"></div>
+
+                    <div class="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4">
+                        <p class="text-blue-700">
                             <i class="fas fa-info-circle mr-2"></i>
-                            <strong>Note:</strong> This is a MVP demo. Full features (payment, tracking, etc.) are implemented in the backend APIs.
+                            <strong>Tip:</strong> Try creating a delivery request or browsing the marketplace!
                         </p>
                     </div>
                 \`;
+            }
+
+            // Show Create Request Form
+            function showCreateRequestForm() {
+                const container = document.getElementById('requestFormContainer');
+                container.innerHTML = \`
+                    <div class="bg-white rounded-xl shadow-lg p-8 mt-6">
+                        <h3 class="text-2xl font-bold mb-6">Create Delivery Request</h3>
+                        <form id="createRequestForm" class="space-y-4">
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">From City</label>
+                                    <select id="departureCity" required class="w-full px-4 py-2 border rounded-lg">
+                                        <option value="Nairobi">Nairobi</option>
+                                        <option value="Lagos">Lagos</option>
+                                        <option value="Accra">Accra</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">To City</label>
+                                    <select id="destinationCity" required class="w-full px-4 py-2 border rounded-lg">
+                                        <option value="Dubai">Dubai</option>
+                                        <option value="London">London</option>
+                                        <option value="New York">New York</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Pickup Address</label>
+                                <input type="text" id="pickupAddress" required class="w-full px-4 py-2 border rounded-lg" placeholder="e.g., JKIA Terminal 1A">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Delivery Address</label>
+                                <input type="text" id="deliveryAddress" required class="w-full px-4 py-2 border rounded-lg" placeholder="e.g., Dubai Marina, Address Tower">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Document Description</label>
+                                <textarea id="documentDescription" required class="w-full px-4 py-2 border rounded-lg" rows="3" placeholder="Describe your documents (e.g., Visa application documents for UAE)"></textarea>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Document Type</label>
+                                    <select id="documentType" class="w-full px-4 py-2 border rounded-lg">
+                                        <option value="legal">Legal Documents</option>
+                                        <option value="contract">Business Contract</option>
+                                        <option value="transcript">Academic Transcript</option>
+                                        <option value="personal">Personal Documents</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Offered Amount (USD)</label>
+                                    <input type="number" id="offeredAmount" required min="10" max="100" class="w-full px-4 py-2 border rounded-lg" placeholder="20">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Urgency</label>
+                                <select id="urgency" class="w-full px-4 py-2 border rounded-lg">
+                                    <option value="within_3_days">Within 3 days</option>
+                                    <option value="within_7_days">Within 7 days</option>
+                                    <option value="flexible">Flexible</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex gap-4">
+                                <button type="submit" class="flex-1 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700">
+                                    <i class="fas fa-paper-plane mr-2"></i>Create Request
+                                </button>
+                                <button type="button" onclick="closeRequestForm()" class="px-6 py-3 border rounded-lg hover:bg-gray-50">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                \`;
+
+                document.getElementById('createRequestForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const requestData = {
+                        departure_city: document.getElementById('departureCity').value,
+                        destination_city: document.getElementById('destinationCity').value,
+                        pickup_address: document.getElementById('pickupAddress').value,
+                        delivery_address: document.getElementById('deliveryAddress').value,
+                        document_description: document.getElementById('documentDescription').value,
+                        document_type: document.getElementById('documentType').value,
+                        offered_amount: parseFloat(document.getElementById('offeredAmount').value),
+                        urgency: document.getElementById('urgency').value
+                    };
+
+                    try {
+                        const response = await axios.post(API_BASE + '/requests', requestData, {
+                            headers: { 'Authorization': \`Bearer \${authToken}\` }
+                        });
+                        
+                        alert('Delivery request created successfully! Request ID: ' + response.data.id);
+                        closeRequestForm();
+                        loadDashboard();
+                    } catch (error) {
+                        alert('Failed to create request: ' + (error.response?.data?.error || 'Unknown error'));
+                    }
+                });
+            }
+
+            function closeRequestForm() {
+                document.getElementById('requestFormContainer').innerHTML = '';
+            }
+
+            // Show Create Trip Form
+            function showCreateTripForm() {
+                const container = document.getElementById('tripFormContainer');
+                container.innerHTML = \`
+                    <div class="bg-white rounded-xl shadow-lg p-8 mt-6">
+                        <h3 class="text-2xl font-bold mb-6">Add Trip</h3>
+                        <form id="createTripForm" class="space-y-4">
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">From City</label>
+                                    <select id="tripDepartureCity" required class="w-full px-4 py-2 border rounded-lg">
+                                        <option value="Nairobi">Nairobi</option>
+                                        <option value="Lagos">Lagos</option>
+                                        <option value="Accra">Accra</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">To City</label>
+                                    <select id="tripDestinationCity" required class="w-full px-4 py-2 border rounded-lg">
+                                        <option value="Dubai">Dubai</option>
+                                        <option value="London">London</option>
+                                        <option value="New York">New York</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Departure Date</label>
+                                    <input type="date" id="departureDate" required class="w-full px-4 py-2 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Arrival Date</label>
+                                    <input type="date" id="arrivalDate" required class="w-full px-4 py-2 border rounded-lg">
+                                </div>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Flight Number (optional)</label>
+                                    <input type="text" id="flightNumber" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g., KQ310">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Airline (optional)</label>
+                                    <input type="text" id="airline" class="w-full px-4 py-2 border rounded-lg" placeholder="e.g., Kenya Airways">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Max Documents to Carry</label>
+                                <select id="maxDocuments" class="w-full px-4 py-2 border rounded-lg">
+                                    <option value="1">1-3 documents</option>
+                                    <option value="3" selected>3-5 documents</option>
+                                    <option value="5">5+ documents</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex gap-4">
+                                <button type="submit" class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700">
+                                    <i class="fas fa-plane mr-2"></i>Add Trip
+                                </button>
+                                <button type="button" onclick="closeTripForm()" class="px-6 py-3 border rounded-lg hover:bg-gray-50">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                \`;
+
+                // Set min date to today
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('departureDate').setAttribute('min', today);
+                document.getElementById('arrivalDate').setAttribute('min', today);
+
+                document.getElementById('createTripForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const tripData = {
+                        departure_city: document.getElementById('tripDepartureCity').value,
+                        destination_city: document.getElementById('tripDestinationCity').value,
+                        departure_date: document.getElementById('departureDate').value,
+                        arrival_date: document.getElementById('arrivalDate').value,
+                        flight_number: document.getElementById('flightNumber').value,
+                        airline: document.getElementById('airline').value,
+                        max_documents: parseInt(document.getElementById('maxDocuments').value)
+                    };
+
+                    try {
+                        const response = await axios.post(API_BASE + '/trips', tripData, {
+                            headers: { 'Authorization': \`Bearer \${authToken}\` }
+                        });
+                        
+                        alert('Trip added successfully! Trip ID: ' + response.data.id);
+                        closeTripForm();
+                        loadDashboard();
+                    } catch (error) {
+                        alert('Failed to add trip: ' + (error.response?.data?.error || 'Unknown error'));
+                    }
+                });
+            }
+
+            function closeTripForm() {
+                document.getElementById('tripFormContainer').innerHTML = '';
+            }
+
+            // Browse Marketplace
+            async function browseMarketplace() {
+                const container = document.getElementById('marketplaceContainer');
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+
+                try {
+                    let response;
+                    if (user.role === 'sender' || user.role === 'both') {
+                        // Show open requests for senders
+                        response = await axios.get(API_BASE + '/requests', {
+                            headers: { 'Authorization': \`Bearer \${authToken}\` }
+                        });
+                        
+                        container.innerHTML = \`
+                            <div class="bg-white rounded-xl shadow-lg p-8 mt-6">
+                                <h3 class="text-2xl font-bold mb-6">My Delivery Requests</h3>
+                                <div class="space-y-4">
+                                    \${response.data.requests.length > 0 ? response.data.requests.map(req => \`
+                                        <div class="border rounded-lg p-4 hover:bg-gray-50">
+                                            <div class="flex justify-between items-start">
+                                                <div>
+                                                    <h4 class="font-bold">\${req.departure_city} → \${req.destination_city}</h4>
+                                                    <p class="text-sm text-gray-600">\${req.document_description}</p>
+                                                    <p class="text-sm text-purple-600 mt-2">$\${req.offered_amount} USD</p>
+                                                </div>
+                                                <span class="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm">\${req.status}</span>
+                                            </div>
+                                        </div>
+                                    \`).join('') : '<p class="text-gray-500">No requests yet. Create your first delivery request!</p>'}
+                                </div>
+                                <button onclick="closeMarketplace()" class="mt-6 px-6 py-2 border rounded-lg hover:bg-gray-50">Close</button>
+                            </div>
+                        \`;
+                    } else {
+                        // Show open requests for travelers
+                        response = await axios.get(API_BASE + '/requests?status=open', {
+                            headers: { 'Authorization': \`Bearer \${authToken}\` }
+                        });
+                        
+                        container.innerHTML = \`
+                            <div class="bg-white rounded-xl shadow-lg p-8 mt-6">
+                                <h3 class="text-2xl font-bold mb-6">Available Delivery Requests</h3>
+                                <div class="space-y-4">
+                                    \${response.data.requests.length > 0 ? response.data.requests.map(req => \`
+                                        <div class="border rounded-lg p-4 hover:bg-gray-50">
+                                            <div class="flex justify-between items-start">
+                                                <div>
+                                                    <h4 class="font-bold">\${req.departure_city} → \${req.destination_city}</h4>
+                                                    <p class="text-sm text-gray-600">\${req.document_description}</p>
+                                                    <p class="text-sm mt-2">
+                                                        <span class="text-purple-600 font-bold">$\${req.offered_amount} USD</span>
+                                                        <span class="text-gray-500 ml-4">Trust Score: \${req.sender_trust_score || 50}</span>
+                                                    </p>
+                                                </div>
+                                                <span class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm">Open</span>
+                                            </div>
+                                        </div>
+                                    \`).join('') : '<p class="text-gray-500">No open requests available yet.</p>'}
+                                </div>
+                                <button onclick="closeMarketplace()" class="mt-6 px-6 py-2 border rounded-lg hover:bg-gray-50">Close</button>
+                            </div>
+                        \`;
+                    }
+                } catch (error) {
+                    alert('Failed to load marketplace: ' + (error.response?.data?.error || 'Unknown error'));
+                }
+            }
+
+            function closeMarketplace() {
+                document.getElementById('marketplaceContainer').innerHTML = '';
             }
 
             // Check if already logged in
