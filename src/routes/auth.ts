@@ -44,8 +44,8 @@ auth.post('/signup', async (c) => {
   
   await db
     .prepare(
-      `INSERT INTO users (id, email, phone, password_hash, full_name, role)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO users (id, email, phone, password_hash, full_name, role, verification_status)
+       VALUES (?, ?, ?, ?, ?, ?, 'approved')`
     )
     .bind(userId, email, phone, passwordHash, full_name, role)
     .run();
