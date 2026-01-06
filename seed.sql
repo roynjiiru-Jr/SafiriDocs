@@ -1,11 +1,11 @@
 -- Test data for SafiriDocs
 
--- Insert test users (password is 'password123' hashed)
+-- Insert test users (password is 'password123' - SHA-256 hashed)
 INSERT OR IGNORE INTO users (id, email, phone, password_hash, full_name, role, verification_status, trust_score) VALUES 
-  ('user-1', 'alice@example.com', '+254712345678', '$2a$10$rZ0vE9xGK5eMBX0XqBq5meeKxT6oJvP4cXR8vG6m0OLkqZxNvQP9e', 'Alice Wanjiru', 'sender', 'approved', 60),
-  ('user-2', 'bob@example.com', '+254723456789', '$2a$10$rZ0vE9xGK5eMBX0XqBq5meeKxT6oJvP4cXR8vG6m0OLkqZxNvQP9e', 'Bob Omondi', 'traveler', 'approved', 75),
-  ('user-3', 'carol@example.com', '+254734567890', '$2a$10$rZ0vE9xGK5eMBX0XqBq5meeKxT6oJvP4cXR8vG6m0OLkqZxNvQP9e', 'Carol Muthoni', 'both', 'approved', 85),
-  ('admin-1', 'admin@safiridocs.com', '+254700000000', '$2a$10$rZ0vE9xGK5eMBX0XqBq5meeKxT6oJvP4cXR8vG6m0OLkqZxNvQP9e', 'Admin User', 'both', 'approved', 100);
+  ('user-1', 'alice@example.com', '+254712345678', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Alice Wanjiru', 'sender', 'approved', 60),
+  ('user-2', 'bob@example.com', '+254723456789', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Bob Omondi', 'traveler', 'approved', 75),
+  ('user-3', 'carol@example.com', '+254734567890', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Carol Muthoni', 'both', 'approved', 85),
+  ('admin-1', 'admin@safiridocs.com', '+254700000000', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Admin User', 'both', 'approved', 100);
 
 -- Insert test trips
 INSERT OR IGNORE INTO trips (id, traveler_id, departure_city, destination_city, departure_date, arrival_date, flight_number, airline, status) VALUES 
